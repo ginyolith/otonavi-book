@@ -2,6 +2,7 @@ import scrapelib
 from bs4 import BeautifulSoup
 from abc import ABCMeta, abstractmethod
 import re
+from pprint import  pprint
 
 
 class ScrapingBase(metaclass=ABCMeta):
@@ -39,8 +40,7 @@ class Scraping_BassOnTopACapella(ScrapingBase):
 
     def analyze_day_info(self, url):
         # 1日の空きスタジオの状況を取得
-        table_url  = self.soup.find('frame', attrs={'name':'table'}).get('src')
-        table_page = self.scraper.get(self.url + table_url)
+        table_page = self.scraper.get(self.url + url)
         table_soup = BeautifulSoup(table_page.content, "html.parser")
 
         # 部屋・時間毎の利用可否情報を取得
@@ -62,7 +62,7 @@ class Scraping_BassOnTopACapella(ScrapingBase):
             if len(availList[row_idx]) == 0 :
                 row = []
             else :
-                row = [0 if cell.getText() == "○" else int(cell.get('rowspan')) for cell in availList[row_idx]]
+                row = [0 if cell.getText() == "○" else int(cell.get('rowspan') or 1) for cell in availList[row_idx]]
 
             # 前行に✗のセルが存在し、今の行にも存在する場合、✗データを今行の列に挿入
             if len(availList_parse) > 0 :
@@ -84,7 +84,6 @@ class Scraping_BassOnTopACapella(ScrapingBase):
         # 時間毎のLISTから、部屋毎の使用可能状況のLISTに変換
         parsed_list =  parseReservationInfo(list(), 1)
         reserve_list_each_room = dict(zip(roomList, map(lambda avail : list(zip(avail, timeList)) ,zip(*parsed_list))))
-        print(",", end="")
 
     def execute(self):
         # サイドバーのカレンダーからアクセス出来る日付の一覧を取得
