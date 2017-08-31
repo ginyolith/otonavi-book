@@ -2,7 +2,6 @@ import scrapelib
 from bs4 import BeautifulSoup
 from abc import ABCMeta, abstractmethod
 import re
-from pprint import  pprint
 
 
 class ScrapingBase(metaclass=ABCMeta):
@@ -90,12 +89,14 @@ class Scraping_BassOnTopACapella(ScrapingBase):
         calendar_url  = self.soup.find('frame', attrs={'name':'calendar'}).get('src')
         calendar_page = self.scraper.get(self.url + calendar_url)
         calendar_soup = BeautifulSoup(calendar_page.content, "html.parser")
-        urlList = [td.find('a').get('href') for td in calendar_soup.find_all('td') if td.find('a') is not None]
+        urlList = [td.find('a').get('href')for td in calendar_soup.find_all('td') if td.find('a') is not None]
 
         # サイドバーのカレンダーからアクセス出来る日程の情報にアクセス
         for idx, url in enumerate(urlList) :
+            #解析対象日付文字列をURLから取得する
+            date = re.search("[0-9]{4}\/[0-9]{1,2}\/[0-9]{1,2}", url).group()
             self.analyze_day_info(url)
-            print(f"{idx + 1}/{len(urlList)} done")
+            print(f"{idx + 1}/{len(urlList)}:{date} done")
 
 if __name__ == '__main__':
     from timeit import Timer
